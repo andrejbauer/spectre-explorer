@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spectre-explorer"
+version = "0.1.0"
+description = "Generate, crop, colour and measure Spectre, Hat and Turtle aperiodic tilings"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Andrej Bauer", email = "andrej.bauer@andrej.com" }]
+keywords = ["aperiodic", "tiling", "monotile", "spectre", "hat", "einstein"]
+dependencies = []
+
+[project.optional-dependencies]
+png = ["matplotlib>=3.7"]
+dev = ["pytest>=7", "shapely>=2"]
+
+[project.scripts]
+spectre = "spectre_explorer.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
