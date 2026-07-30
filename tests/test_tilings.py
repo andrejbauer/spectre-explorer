@@ -2,7 +2,7 @@
 
 import pytest
 
-from spectre_explorer.geometry import apply, point_to_float
+from spectre_explorer.geometry import point_to_float
 from spectre_explorer.systems import SYSTEMS, grow, patch
 from spectre_explorer.tiling import Supertile, base_tiles, placements, tile_count
 

@@ -78,6 +78,12 @@ def test_the_hat_matches_the_reference_export(key, name):
 
 
 def test_the_turtle_is_not_the_hat():
-    """Guards against the two shapes of the H7/H8 continuum being confused."""
+    """Guards against the two shapes of the H7/H8 continuum being confused.
+
+    The two have the same substitution, so their tiles sit in corresponding places
+    and the comparison finds a pairing.  The outlines are what differ, and they
+    differ by whole tile edges."""
     theirs = sample(HAT_FILES[("H8", 3)])
-    assert deviation(outlines("turtle", "H8", 3), theirs) is None
+    mine = outlines("turtle", "H8", 3)
+    worst = deviation(mine, theirs)
+    assert worst is None or worst / scale_between(mine, theirs) > 0.1

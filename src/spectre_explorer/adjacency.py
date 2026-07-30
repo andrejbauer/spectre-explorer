@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Iterator, Sequence
+from typing import Iterator
 
 from .geometry import IDENTITY, apply, compose, point_to_float, rotation_about
 from .tiling import Node, Placement, Rectangle, base_tiles, placements

@@ -39,7 +39,7 @@ __version__ = "0.1.0"
 
 def draw(root: Node, path: str, *, colors: str = "mystics", **options) -> int:
     """Write a picture of a patch, choosing the format from the file name."""
-    from . import data, raster, svg
+    from . import raster, svg
 
     color_map = COLOR_MAPS[colors]
     if path.lower().endswith((".png", ".pdf", ".jpg", ".jpeg", ".tif", ".tiff")):

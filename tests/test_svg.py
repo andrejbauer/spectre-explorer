@@ -7,7 +7,7 @@ import re
 
 import pytest
 
-from agreement import deviation, expand_uses, scale_between
+from agreement import deviation, expand_uses
 from spectre_explorer import svg
 from spectre_explorer.colors import BY_NAME
 from spectre_explorer.geometry import apply, point_to_float

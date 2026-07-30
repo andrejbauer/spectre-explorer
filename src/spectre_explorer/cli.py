@@ -10,7 +10,7 @@ from typing import IO, Iterator, Sequence
 
 from . import data, svg
 from .colors import BY_NAME
-from .systems import SYSTEMS, grow, patch
+from .systems import SYSTEMS, patch
 from .tiling import Rectangle, bounds, tile_count
 
 RASTER_SUFFIXES = (".png", ".pdf", ".jpg", ".jpeg", ".tif", ".tiff")
