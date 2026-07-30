@@ -6,7 +6,7 @@ Import this only when a raster picture is wanted.
 
 from __future__ import annotations
 
-from .colours import ColourMap
+from .colors import ColorMap
 from .geometry import IDENTITY, apply, point_to_float
 from .svg import Painting, by_label
 from .tiling import Node, Rectangle, base_tiles, bounds, placements
@@ -31,7 +31,7 @@ def write(
     path: str,
     root: Node,
     *,
-    colour_map: ColourMap,
+    color_map: ColorMap,
     painting: Painting | None = None,
     window: Rectangle | None = None,
     stroke_width: float = 0.02,
@@ -48,7 +48,7 @@ def write(
     from matplotlib.collections import PathCollection
     from matplotlib.path import Path
 
-    painted = by_label(colour_map) if painting is None else painting
+    painted = by_label(color_map) if painting is None else painting
     left, bottom, right, top = window if window is not None else bounds(root)
     view = (left - margin, bottom - margin, right + margin, top + margin)
     width = view[2] - view[0]
@@ -60,7 +60,7 @@ def write(
     for placement in placements(root, IDENTITY, window):
         points, codes = _outline(shapes[placement.label], placement.transform)
         paths.append(Path(points, codes, closed=True))
-        red, green, blue = painted.colour(placement)
+        red, green, blue = painted.color(placement)
         fills.append((red / 255, green / 255, blue / 255))
 
     figure = pyplot.figure(

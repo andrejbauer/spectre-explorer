@@ -1,16 +1,16 @@
-"""Colour maps, ported from the reference implementations.
+"""Color maps, ported from the reference implementations.
 
-A colour map sends a tile label to a red-green-blue triple.  The Spectre maps use
+A color map sends a tile label to a red-green-blue triple.  The Spectre maps use
 the nine substitution labels, splitting `Gamma` into the two halves of the mystic;
 the Hat map uses the three labels of the H7/H8 system.
 """
 
 from __future__ import annotations
 
-Colour = tuple[int, int, int]
-ColourMap = dict[str, Colour]
+Color = tuple[int, int, int]
+ColorMap = dict[str, Color]
 
-FIGURE_53: ColourMap = {
+FIGURE_53: ColorMap = {
     "Gamma": (203, 157, 126),
     "Gamma1": (203, 157, 126),
     "Gamma2": (203, 157, 126),
@@ -24,7 +24,7 @@ FIGURE_53: ColourMap = {
     "Psi": (224, 223, 156),
 }
 
-BRIGHT: ColourMap = {
+BRIGHT: ColorMap = {
     "Gamma": (255, 255, 255),
     "Gamma1": (255, 255, 255),
     "Gamma2": (255, 255, 255),
@@ -38,7 +38,7 @@ BRIGHT: ColourMap = {
     "Psi": (0, 255, 255),
 }
 
-MYSTICS: ColourMap = {
+MYSTICS: ColorMap = {
     "Gamma": (196, 201, 169),
     "Gamma1": (196, 201, 169),
     "Gamma2": (156, 160, 116),
@@ -52,7 +52,7 @@ MYSTICS: ColourMap = {
     "Psi": (247, 252, 248),
 }
 
-PRIDE: ColourMap = {
+PRIDE: ColorMap = {
     "Gamma": (255, 255, 255),
     "Gamma1": (97, 57, 21),
     "Gamma2": (0, 0, 0),
@@ -66,28 +66,49 @@ PRIDE: ColourMap = {
     "Psi": (255, 238, 0),
 }
 
-GREY: ColourMap = {
+GRAY: ColorMap = {
     "single": (255, 255, 255),
     "unflipped": (200, 200, 200),
     "flipped": (150, 150, 150),
 }
 
-BY_NAME: dict[str, ColourMap] = {
+BY_NAME: dict[str, ColorMap] = {
     "pride": PRIDE,
     "mystics": MYSTICS,
     "fig53": FIGURE_53,
     "bright": BRIGHT,
-    "grey": GREY,
+    "gray": GRAY,
 }
 
-FALLBACK: Colour = (200, 200, 200)
+FALLBACK: Color = (200, 200, 200)
+
+#: A readable spread of hues for labels that no map names, as in a grammar the user
+#: has just written.
+PALETTE: tuple[Color, ...] = (
+    (68, 119, 170),
+    (238, 119, 51),
+    (34, 136, 51),
+    (204, 51, 17),
+    (170, 51, 119),
+    (0, 153, 136),
+    (238, 187, 34),
+    (136, 34, 85),
+)
 
 
-def colour_of(colour_map: ColourMap, label: str) -> Colour:
-    """The colour of a label, or a neutral grey for a label the map does not name."""
-    return colour_map.get(label, FALLBACK)
+def for_labels(labels: list[str]) -> ColorMap:
+    """A color map covering whatever labels are in hand."""
+    return {
+        label: PALETTE[index % len(PALETTE)]
+        for index, label in enumerate(sorted(labels))
+    }
 
 
-def to_css(colour: Colour) -> str:
-    """A colour written the way SVG wants it."""
-    return f"rgb({colour[0]},{colour[1]},{colour[2]})"
+def color_of(color_map: ColorMap, label: str) -> Color:
+    """The color of a label, or a neutral gray for a label the map does not name."""
+    return color_map.get(label, FALLBACK)
+
+
+def to_css(color: Color) -> str:
+    """A color written the way SVG wants it."""
+    return f"rgb({color[0]},{color[1]},{color[2]})"

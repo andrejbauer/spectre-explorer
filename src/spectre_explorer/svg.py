@@ -25,7 +25,7 @@ from typing import Callable, IO, Iterable
 
 from dataclasses import dataclass
 
-from .colours import Colour, ColourMap, colour_of, to_css
+from .colors import Color, ColorMap, color_of, to_css
 from .geometry import IDENTITY, Transform, apply, point_to_float
 from .tiling import (
     Node,
@@ -43,38 +43,38 @@ from .tiling import (
 #: costs almost nothing to write it accurately whatever the coordinate precision is.
 LINEAR_DIGITS = 6
 
-Chooser = Callable[[Placement], Colour]
+Chooser = Callable[[Placement], Color]
 
 
 @dataclass(frozen=True)
 class Painting:
-    """How tiles are coloured, and which coloured outlines a document must define."""
+    """How tiles are colored, and which colored outlines a document must define."""
 
-    colour: Chooser
-    definitions: Callable[[Iterable[str]], list[tuple[str, Colour]]]
+    color: Chooser
+    definitions: Callable[[Iterable[str]], list[tuple[str, Color]]]
 
 
-def by_label(colour_map: ColourMap) -> Painting:
-    """Colour every tile by its own label."""
+def by_label(color_map: ColorMap) -> Painting:
+    """Color every tile by its own label."""
     return Painting(
-        colour=lambda placement: colour_of(colour_map, placement.label),
+        color=lambda placement: color_of(color_map, placement.label),
         definitions=lambda labels: [
-            (label, colour_of(colour_map, label)) for label in labels
+            (label, color_of(color_map, label)) for label in labels
         ],
     )
 
 
-def by_ancestor(colour_map: ColourMap, levels: int) -> Painting:
-    """Colour every tile by the label of the supertile the given number of rounds
+def by_ancestor(color_map: ColorMap, levels: int) -> Painting:
+    """Color every tile by the label of the supertile the given number of rounds
     above it, which shows the fractal structure of the substitution."""
 
-    def colour(placement: Placement) -> Colour:
+    def color(placement: Placement) -> Color:
         depth = min(levels, len(placement.ancestry) - 1)
-        return colour_of(colour_map, placement.ancestry[-1 - depth])
+        return color_of(color_map, placement.ancestry[-1 - depth])
 
-    palette = sorted(set(colour_map.values()))
+    palette = sorted(set(color_map.values()))
     return Painting(
-        colour=colour,
+        color=color,
         definitions=lambda labels: [
             (label, shade) for label in labels for shade in palette
         ],
@@ -157,7 +157,7 @@ def write(
     root: Node,
     *,
     mode: str = "use",
-    colour_map: ColourMap,
+    color_map: ColorMap,
     painting: Painting | None = None,
     precision: int = 3,
     stroke_width: float = 0.02,
@@ -167,7 +167,7 @@ def write(
     title: str = "Aperiodic tiling",
 ) -> int:
     """Write a tiling and return the number of tiles written."""
-    painted = by_label(colour_map) if painting is None else painting
+    painted = by_label(color_map) if painting is None else painting
     view = _view(window if window is not None else bounds(root), 1.0)
     for piece in _header(view, pixel_width, title, precision):
         stream.write(piece)
@@ -183,7 +183,7 @@ def write(
     elif mode == "use":
         count = _write_uses(stream, root, shapes, painted, precision, window, opening)
     elif mode == "nested":
-        count = _write_nested(stream, root, shapes, colour_map, precision, opening)
+        count = _write_nested(stream, root, shapes, color_map, precision, opening)
     else:
         raise ValueError(f"unknown SVG mode {mode!r}")
 
@@ -205,7 +205,7 @@ def _write_flat(stream, root, shapes, painted, precision, window, opening) -> in
             else tuple(apply(placement.transform, point) for point in tile.curve),
         )
         element, geometry = _outline_data(moved, precision)
-        fill = to_css(painted.colour(placement))
+        fill = to_css(painted.color(placement))
         stream.write(f'<{element} {geometry} fill="{fill}"/>\n')
         count += 1
     return count
@@ -215,24 +215,24 @@ def _write_uses(stream, root, shapes, painted, precision, window, opening) -> in
     drawings = {
         label: _outline_data(tile, precision) for label, tile in shapes.items()
     }
-    defined: dict[tuple[str, str, Colour], str] = {}
-    identifiers: dict[tuple[str, Colour], str] = {}
-    for label, colour in painted.definitions(shapes):
+    defined: dict[tuple[str, str, Color], str] = {}
+    identifiers: dict[tuple[str, Color], str] = {}
+    for label, color in painted.definitions(shapes):
         element, geometry = drawings[label]
-        identifiers[(label, colour)] = defined.setdefault(
-            (element, geometry, colour), f"s{len(defined)}"
+        identifiers[(label, color)] = defined.setdefault(
+            (element, geometry, color), f"s{len(defined)}"
         )
 
     stream.write("<defs>\n")
-    for (element, geometry, colour), identifier in defined.items():
+    for (element, geometry, color), identifier in defined.items():
         stream.write(
-            f'<{element} id="{identifier}" {geometry} fill="{to_css(colour)}"/>\n'
+            f'<{element} id="{identifier}" {geometry} fill="{to_css(color)}"/>\n'
         )
     stream.write("</defs>\n")
     stream.write(opening)
     count = 0
     for placement in placements(root, IDENTITY, window):
-        identifier = identifiers[(placement.label, painted.colour(placement))]
+        identifier = identifiers[(placement.label, painted.color(placement))]
         stream.write(
             f'<use href="#{identifier}" '
             f'transform="{_matrix(placement.transform, precision)}"/>\n'
@@ -241,11 +241,11 @@ def _write_uses(stream, root, shapes, painted, precision, window, opening) -> in
     return count
 
 
-def _write_nested(stream, root, shapes, colour_map, precision, opening) -> int:
+def _write_nested(stream, root, shapes, color_map, precision, opening) -> int:
     """Emit one group per node of the substitution graph.
 
-    Tiles are coloured by their own label here, because sharing a group between
-    supertiles is exactly what makes colouring by ancestry impossible.
+    Tiles are colored by their own label here, because sharing a group between
+    supertiles is exactly what makes coloring by ancestry impossible.
     """
     order: list[Node] = []
     seen: set[int] = set()
@@ -269,7 +269,7 @@ def _write_nested(stream, root, shapes, colour_map, precision, opening) -> int:
         match node:
             case Tile():
                 element, geometry = _outline_data(node, precision)
-                fill = to_css(colour_of(colour_map, node.label))
+                fill = to_css(color_of(color_map, node.label))
                 stream.write(
                     f'<{element} id="{identifiers[id(node)]}" {geometry} '
                     f'fill="{fill}"/>\n'

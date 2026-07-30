@@ -1,0 +1,28 @@
+{
+  "name": "my grammar",
+  "description": "A grammar to edit. There are two sections. 'shapes' holds the outlines that get drawn, each with a list of anchor points used to join things together; anchors do not have to lie on the outline. 'rules' says what each object is made of. A rule's 'base' names the shape it is at generation 0. Its 'parts' say what it is made of after that: each part is a copy of some object, turned by 'turn' degrees and then slid until its own anchor number 'anchor' sits on anchor number 'onto' of an earlier part. That earlier part is the one before it unless 'after' names another by position, counting from 0. 'generation' is a step relative to the object being built, so -1 means one generation younger and 0 means the same generation. A rule's own 'anchors' say which anchors of which parts become the anchors of the finished object, and that is how the next generation up will attach to it. Run 'spectre grammar count' first to check the arithmetic, then 'spectre grammar draw' to see it.",
+
+  "shapes": {
+    "block": {
+      "outline": [[0, 0], [1, 0], [1, 1], [0, 1]],
+      "anchors": [[0, 0], [1, 0], [1, 1], [0, 1]]
+    }
+  },
+
+  "rules": {
+    "A": {
+      "base": "block",
+      "parts": [
+        {"symbol": "A", "generation": -1, "turn": 0, "anchor": 0, "onto": 0},
+        {"symbol": "A", "generation": -1, "turn": 0, "anchor": 0, "onto": 1, "after": 0},
+        {"symbol": "A", "generation": -1, "turn": 0, "anchor": 0, "onto": 3, "after": 0}
+      ],
+      "anchors": [
+        {"part": 0, "anchor": 0},
+        {"part": 1, "anchor": 1},
+        {"part": 1, "anchor": 2},
+        {"part": 2, "anchor": 3}
+      ]
+    }
+  }
+}

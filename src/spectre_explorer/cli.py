@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from typing import IO, Iterator, Sequence
 
 from . import data, svg
-from .colours import BY_NAME
+from .colors import BY_NAME
 from .systems import SYSTEMS, grow, patch
 from .tiling import Rectangle, bounds, tile_count
 
@@ -35,16 +35,16 @@ def _open_text(path: str | None) -> Iterator[IO[str]]:
 
 
 def _painting(arguments: argparse.Namespace):
-    colour_map = BY_NAME[arguments.colours]
-    if arguments.colour_by == "label":
-        return colour_map, svg.by_label(colour_map)
-    elif arguments.colour_by.startswith("ancestor:"):
-        return colour_map, svg.by_ancestor(
-            colour_map, int(arguments.colour_by.split(":", 1)[1])
+    color_map = BY_NAME[arguments.colors]
+    if arguments.color_by == "label":
+        return color_map, svg.by_label(color_map)
+    elif arguments.color_by.startswith("ancestor:"):
+        return color_map, svg.by_ancestor(
+            color_map, int(arguments.color_by.split(":", 1)[1])
         )
     else:
         raise SystemExit(
-            f"unknown colouring {arguments.colour_by!r}: "
+            f"unknown coloring {arguments.color_by!r}: "
             "use 'label' or 'ancestor:N' for a whole number N"
         )
 
@@ -55,16 +55,16 @@ def _window(arguments: argparse.Namespace) -> Rectangle | None:
 
 def _add_drawing_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        "--colours",
+        "--colors",
         default=None,
         choices=sorted(BY_NAME),
-        help="colour map (each system has its own default)",
+        help="color map (each system has its own default)",
     )
     parser.add_argument(
-        "--colour-by",
+        "--color-by",
         default="label",
         metavar="RULE",
-        help="'label' colours each tile by its own label; 'ancestor:N' colours it by "
+        help="'label' colors each tile by its own label; 'ancestor:N' colors it by "
         "the supertile N rounds above it, which shows the fractal structure",
     )
     parser.add_argument(
@@ -87,7 +87,7 @@ def _add_drawing_options(parser: argparse.ArgumentParser) -> None:
         default=0.02,
         help="outline width in tile units, so it does not change with depth",
     )
-    parser.add_argument("--stroke", default="black", help="outline colour")
+    parser.add_argument("--stroke", default="black", help="outline color")
     parser.add_argument(
         "--window",
         type=float,
@@ -102,7 +102,7 @@ def _add_drawing_options(parser: argparse.ArgumentParser) -> None:
 
 def _draw(arguments: argparse.Namespace) -> None:
     root = patch(arguments.system, arguments.category, arguments.generation)
-    colour_map, painting = _painting(arguments)
+    color_map, painting = _painting(arguments)
     window = _window(arguments)
     if arguments.out is not None and arguments.out.lower().endswith(RASTER_SUFFIXES):
         from . import raster
@@ -110,7 +110,7 @@ def _draw(arguments: argparse.Namespace) -> None:
         count = raster.write(
             arguments.out,
             root,
-            colour_map=colour_map,
+            color_map=color_map,
             painting=painting,
             window=window,
             stroke_width=arguments.stroke_width,
@@ -123,7 +123,7 @@ def _draw(arguments: argparse.Namespace) -> None:
                 handle,
                 root,
                 mode=arguments.mode,
-                colour_map=colour_map,
+                color_map=color_map,
                 painting=painting,
                 precision=arguments.precision,
                 stroke_width=arguments.stroke_width,
@@ -156,7 +156,7 @@ def _data(arguments: argparse.Namespace) -> None:
 
 
 def _frames(arguments: argparse.Namespace) -> None:
-    colour_map, painting = _painting(arguments)
+    color_map, painting = _painting(arguments)
     window = _window(arguments)
     for generation in range(arguments.through + 1):
         root = patch(arguments.system, arguments.category, generation)
@@ -166,7 +166,7 @@ def _frames(arguments: argparse.Namespace) -> None:
                 handle,
                 root,
                 mode=arguments.mode,
-                colour_map=colour_map,
+                color_map=color_map,
                 painting=painting,
                 precision=arguments.precision,
                 stroke_width=arguments.stroke_width,
@@ -178,6 +178,75 @@ def _frames(arguments: argparse.Namespace) -> None:
         print(f"{path}: {count} tiles", file=sys.stderr)
 
 
+def _grammar_count(arguments: argparse.Namespace) -> None:
+    from . import grammar
+
+    rules = grammar.load(arguments.file)
+    names = sorted(rules.rules)
+    print("generation," + ",".join(names))
+    for generation in range(arguments.through + 1):
+        counted = grammar.counts(rules, generation)
+        print(f"{generation}," + ",".join(str(counted[name]) for name in names))
+
+
+def _grammar_draw(arguments: argparse.Namespace) -> None:
+    from . import grammar
+    from .colors import for_labels
+    from .tiling import approximate, base_tiles
+
+    rules = grammar.load(arguments.file)
+    root = approximate(grammar.build(rules, arguments.symbol, arguments.generation))
+    color_map = for_labels(list(base_tiles(root)) + list(rules.rules))
+    painting = (
+        svg.by_ancestor(color_map, int(arguments.color_by.split(":", 1)[1]))
+        if arguments.color_by.startswith("ancestor:")
+        else svg.by_label(color_map)
+    )
+    window = _window(arguments)
+    if arguments.out is not None and arguments.out.lower().endswith(RASTER_SUFFIXES):
+        from . import raster
+
+        count = raster.write(
+            arguments.out,
+            root,
+            color_map=color_map,
+            painting=painting,
+            window=window,
+            stroke_width=arguments.stroke_width,
+            stroke=arguments.stroke,
+            pixel_width=arguments.width,
+        )
+    else:
+        with _open_text(arguments.out) as handle:
+            count = svg.write(
+                handle,
+                root,
+                mode=arguments.mode,
+                color_map=color_map,
+                painting=painting,
+                precision=arguments.precision,
+                stroke_width=arguments.stroke_width,
+                stroke=arguments.stroke,
+                window=window,
+                pixel_width=arguments.width,
+                title=f"{rules.name}: {arguments.symbol} at generation "
+                f"{arguments.generation}",
+            )
+    print(
+        f"{count} pieces written to {arguments.out or 'standard output'}",
+        file=sys.stderr,
+    )
+
+
+def _grammar_new(arguments: argparse.Namespace) -> None:
+    from importlib.resources import files
+
+    template = files("spectre_explorer").joinpath("template.json").read_text()
+    with open(arguments.file, "w", encoding="utf-8") as handle:
+        handle.write(template)
+    print(f"a grammar to edit is in {arguments.file}", file=sys.stderr)
+
+
 def _bounds(arguments: argparse.Namespace) -> None:
     root = patch(arguments.system, arguments.category, arguments.generation)
     left, bottom, right, top = bounds(root)
@@ -187,7 +256,7 @@ def _bounds(arguments: argparse.Namespace) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="spectre",
-        description="Generate, crop, colour and measure aperiodic tilings built "
+        description="Generate, crop, color and measure aperiodic tilings built "
         "from the Spectre, the hat and the turtle.",
         epilog="Tilings: " + _system_help(),
     )
@@ -238,12 +307,39 @@ def build_parser() -> argparse.ArgumentParser:
     extent.add_argument("--generation", "-g", type=int, required=True)
     extent.set_defaults(run=_bounds)
 
+    grammar = commands.add_parser(
+        "grammar",
+        help="Work with a grammar of your own: rules that build objects out of "
+        "copies of other objects.",
+    )
+    kinds = grammar.add_subparsers(dest="kind", required=True)
+
+    started = kinds.add_parser("new", help="Write a grammar to start from.")
+    started.add_argument("file", help="file to write")
+    started.set_defaults(run=_grammar_new)
+
+    counted = kinds.add_parser(
+        "count", help="Print how many pieces each symbol stands for, generation by "
+        "generation, which is the quickest check that a grammar says what you meant."
+    )
+    counted.add_argument("file")
+    counted.add_argument("--through", "-g", type=int, default=6)
+    counted.set_defaults(run=_grammar_count)
+
+    drawn = kinds.add_parser("draw", help="Draw one symbol of a grammar.")
+    drawn.add_argument("file")
+    drawn.add_argument("--symbol", "-s", required=True, help="which rule to draw")
+    drawn.add_argument("--generation", "-g", type=int, required=True)
+    drawn.add_argument("--out", "-o", default=None)
+    _add_drawing_options(drawn)
+    drawn.set_defaults(run=_grammar_draw)
+
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> None:
     parser = build_parser()
     arguments = parser.parse_args(argv)
-    if getattr(arguments, "colours", None) is None and hasattr(arguments, "system"):
-        arguments.colours = SYSTEMS[arguments.system].default_colours
+    if getattr(arguments, "colors", None) is None and hasattr(arguments, "system"):
+        arguments.colors = SYSTEMS[arguments.system].default_colors
     arguments.run(arguments)

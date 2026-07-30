@@ -24,7 +24,7 @@ class System:
     substitute: Callable[[dict[str, Node]], dict[str, Node]]
     categories: tuple[str, ...]
     default_category: str
-    default_colours: str
+    default_colors: str
 
 
 SYSTEMS: dict[str, System] = {
@@ -74,7 +74,7 @@ SYSTEMS: dict[str, System] = {
         hat.substitute,
         hat.LABELS,
         "H8",
-        "grey",
+        "gray",
     ),
     "turtle": System(
         "the turtle on the H7/H8 substitution",
@@ -82,7 +82,7 @@ SYSTEMS: dict[str, System] = {
         hat.substitute,
         hat.LABELS,
         "H8",
-        "grey",
+        "gray",
     ),
 }
 

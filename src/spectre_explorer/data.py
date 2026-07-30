@@ -22,8 +22,8 @@ COLUMNS = (
     "d",
     "e",
     "f",
-    "centre_x",
-    "centre_y",
+    "center_x",
+    "center_y",
 )
 
 
@@ -50,7 +50,7 @@ def write(
             point_to_float(apply(placement.transform, vertex))
             for vertex in shapes[placement.label].outline
         ]
-        centre = (
+        center = (
             sum(x for x, _ in outline) / len(outline),
             sum(y for _, y in outline) / len(outline),
         )
@@ -59,8 +59,8 @@ def write(
                 placement.label,
                 "/".join(placement.ancestry),
                 *(round(float(entry), precision) for entry in placement.transform),
-                round(centre[0], precision),
-                round(centre[1], precision),
+                round(center[0], precision),
+                round(center[1], precision),
             )
         )
         count += 1

@@ -15,12 +15,12 @@ tilings, `tiling.placements` walks a patch tile by tile, and `svg`, `raster` and
 
 from __future__ import annotations
 
-from .colours import BY_NAME as COLOUR_MAPS
+from .colors import BY_NAME as COLOR_MAPS
 from .systems import SYSTEMS, grow, patch as tiling_patch
 from .tiling import Node, Placement, Rectangle, bounds, placements, tile_count
 
 __all__ = [
-    "COLOUR_MAPS",
+    "COLOR_MAPS",
     "Node",
     "Placement",
     "Rectangle",
@@ -37,19 +37,19 @@ __all__ = [
 __version__ = "0.1.0"
 
 
-def draw(root: Node, path: str, *, colours: str = "mystics", **options) -> int:
+def draw(root: Node, path: str, *, colors: str = "mystics", **options) -> int:
     """Write a picture of a patch, choosing the format from the file name."""
     from . import data, raster, svg
 
-    colour_map = COLOUR_MAPS[colours]
+    color_map = COLOR_MAPS[colors]
     if path.lower().endswith((".png", ".pdf", ".jpg", ".jpeg", ".tif", ".tiff")):
-        return raster.write(path, root, colour_map=colour_map, **options)
+        return raster.write(path, root, color_map=color_map, **options)
     else:
         import gzip
 
         opener = gzip.open if path.endswith((".svgz", ".gz")) else open
         with opener(path, "wt", encoding="utf-8") as handle:
-            return svg.write(handle, root, colour_map=colour_map, **options)
+            return svg.write(handle, root, color_map=color_map, **options)
 
 
 def table(root: Node, path: str, **options) -> int:
