@@ -12,7 +12,15 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Iterator, NamedTuple, Union
 
-from .geometry import IDENTITY, Point, Transform, apply, compose, point_to_float
+from .geometry import (
+    IDENTITY,
+    Point,
+    Transform,
+    apply,
+    compose,
+    point_to_float,
+    to_float,
+)
 
 Rectangle = tuple[float, float, float, float]
 
@@ -156,6 +164,42 @@ def base_tiles(node: Node) -> dict[str, Tile]:
                 for child, _ in node.children
                 for label, tile in base_tiles(child).items()
             }
+
+
+def approximate(root: Node) -> Node:
+    """The same tiling with every coordinate and transform converted to a float.
+
+    The substitution is built with exact arithmetic, which costs nothing because a
+    graph holds only a handful of nodes per round.  Walking it does the arithmetic
+    once per tile, where exactness would cost everything, so convert first.  Sharing
+    is preserved, so this is as cheap as the graph is small.
+    """
+    converted: dict[int, Node] = {}
+
+    def convert(node: Node) -> Node:
+        if id(node) not in converted:
+            match node:
+                case Tile():
+                    converted[id(node)] = Tile(
+                        node.label,
+                        tuple(point_to_float(point) for point in node.outline),
+                        tuple(point_to_float(point) for point in node.keys),
+                        None
+                        if node.curve is None
+                        else tuple(point_to_float(point) for point in node.curve),
+                    )
+                case Supertile():
+                    converted[id(node)] = Supertile(
+                        node.label,
+                        tuple(
+                            (convert(child), to_float(transform))
+                            for child, transform in node.children
+                        ),
+                        tuple(point_to_float(point) for point in node.keys),
+                    )
+        return converted[id(node)]
+
+    return convert(root)
 
 
 def expand(system: dict[str, Node], rounds: int, substitute) -> dict[str, Node]:
