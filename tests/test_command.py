@@ -42,8 +42,8 @@ def test_the_table_has_one_row_for_each_tile(tmp_path):
     main(["data", "tile11", "-g", "3", "-o", str(out)])
     rows = list(csv.DictReader(out.read_text().splitlines()))
     assert len(rows) == 488
-    assert rows[0]["ancestry"].startswith("Gamma/")
-    assert rows[0]["label"] in ("Gamma1", "Gamma2", "Delta", "Pi", "Theta")
+    assert all(row["ancestry"].startswith("Gamma/") for row in rows)
+    assert all(row["ancestry"].split("/")[-1] == row["label"] for row in rows)
 
 
 def test_frames_are_numbered(tmp_path):
